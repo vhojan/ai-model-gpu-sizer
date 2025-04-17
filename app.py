@@ -1,39 +1,40 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="AI Model GPU Sizer", page_icon="🧠")
+# Page settings
+st.set_page_config(page_title="AI Model GPU Sizer", page_icon="🧠", layout="centered")
+
 st.title("🧠 AI Model GPU Sizer")
+st.markdown("Select your model, user count, and latency goal to find the recommended GPU configuration.")
 
-st.markdown("Estimate the required on-prem hardware for AI model inference workloads.")
-
-# Load the data
+# Load data
 @st.cache_data
 def load_data():
     return pd.read_csv("sizing_matrix.csv")
 
 df = load_data()
 
-# Sidebar filters
-with st.sidebar:
-    st.header("Configuration")
-    model = st.selectbox("Model", sorted(df["Model"].unique()))
-    quant = st.selectbox("Quantization", sorted(df["Quantization"].unique()))
-    latency = st.selectbox("Latency Target", sorted(df["Latency Target (s)"].unique()))
-    users = st.slider("Minimum Concurrent Users", 1, 50, 5)
+# --- UI Controls ---
+models = sorted(df["Model"].unique())
+latencies = sorted(df["Latency Target (s)"].unique())
 
-# Filter data
-st.write("Available data preview:", df.head(10))
-st.write("You selected:", model, quant, latency, users)
+selected_model = st.selectbox("Model", models)
+selected_latency = st.selectbox("Target First-Token Latency", latencies)
+selected_users = st.slider("Concurrent Users", min_value=1, max_value=50, value=10)
 
-filtered = df[
-    (df["Model"] == model) &
-    (df["Quantization"] == quant) &
-    (df["Latency Target (s)"] == latency) &
-    (df["Users"] >= users)
-]
+# --- Filter Logic ---
+matches = df[
+    (df["Model"] == selected_model) &
+    (df["Latency Target (s)"] == selected_latency) &
+    (df["Users"] >= selected_users)
+].sort_values("Users")
 
-# Display
-if not filtered.empty:
-    st.success(f"Found {len(filtered)} matching configuration(s):")
-    # pyright: ignore[reportUndefinedVariable]
-    st.dataframe(filtered.reset_index(drop=True), use_container_width) # type: ignore
+# --- Results Display ---
+if not matches.empty:
+    st.success(f"Recommended GPU configurations for {selected_model} with ≥{selected_users} users and latency {selected_latency}:")
+    st.dataframe(
+        matches[["Quantization", "GPUs Needed", "GPU Type", "RAM (GB)", "CPUs"]],
+        use_container_width=True
+    )
+else:
+    st.warning("No matching configuration found. Try reducing user count or changing the latency target.")
