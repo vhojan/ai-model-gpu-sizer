@@ -22,6 +22,9 @@ with st.sidebar:
     users = st.slider("Minimum Concurrent Users", 1, 50, 5)
 
 # Filter data
+st.write("Available data preview:", df.head(10))
+st.write("You selected:", model, quant, latency, users)
+
 filtered = df[
     (df["Model"] == model) &
     (df["Quantization"] == quant) &
@@ -32,4 +35,5 @@ filtered = df[
 # Display
 if not filtered.empty:
     st.success(f"Found {len(filtered)} matching configuration(s):")
-    st.dataframe(filtered.reset_index(drop=True), use_container_width)
+    # pyright: ignore[reportUndefinedVariable]
+    st.dataframe(filtered.reset_index(drop=True), use_container_width) # type: ignore
