@@ -19,3 +19,14 @@ DeepSeek-Coder R3 Distil 1.3B,1.3B,8,0.6
 DeepSeek-Coder R3 Distil 6.7B,6.7B,24,0.9
 Mistral Medium,Mixtral-4x22B,88,2.0
 Mistral Large,Mistral-460B,320,3.6
+Gemma-2B,2B,6,0.5
+Gemma-7B,7B,20,0.9
+Phi-3 Mini (3.8B),3.8B,12,0.6
+Phi-3 Small (7B),7B,22,0.9
+Phi-3 Medium (14B),14B,44,1.3
+Mixtral-8x22B,MoE-8x22B,96,2.1
+LLaVA-1.6,13B,40,1.4
+LLaVA-1.8,34B,68,2.2
+LLaMA 3-8B,8B,26,0.95
+LLaMA 3-70B,70B,80,2.4
+Command R+ 104B,104B,120,3.1
