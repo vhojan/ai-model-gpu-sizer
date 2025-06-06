@@ -1,0 +1,74 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gpu-sizer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-model-gpu-sizer
+  namespace: gpu-sizer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-model-gpu-sizer
+  template:
+    metadata:
+      labels:
+        app: ai-model-gpu-sizer
+    spec:
+      containers:
+      - name: ai-model-gpu-sizer
+        image: ghcr.io/vhojan/ai-model-gpu-sizer:latest
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-model-gpu-sizer
+  namespace: gpu-sizer
+spec:
+  selector:
+    app: ai-model-gpu-sizer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ai-model-gpu-sizer
+  namespace: gpu-sizer
+spec:
+  to:
+    kind: Service
+    name: ai-model-gpu-sizer
+  port:
+    targetPort: 3000
+  tls:
+    termination: edge
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ai-model-gpu-sizer
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/vhojan/ai-model-gpu-sizer
+    targetRevision: HEAD
+    path: manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gpu-sizer
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
