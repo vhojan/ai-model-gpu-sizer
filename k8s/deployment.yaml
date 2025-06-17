@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-sizer
+  namespace: gpu-sizer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gpu-sizer
+  template:
+    metadata:
+      labels:
+        app: gpu-sizer
+    spec:
+      containers:
+        - name: gpu-sizer
+          image: ghcr.io/vhojan/ai-model-gpu-sizer:latest
+          ports:
+            - containerPort: 3000
+          imagePullPolicy: Always
