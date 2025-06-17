@@ -20,10 +20,8 @@ ENV STREAMLIT_SERVER_ENABLECORS=false
 
 # Copy app source code
 COPY . .
-
-# Force copy config.toml separately (even if . was already copied)
 COPY .streamlit/config.toml /root/.streamlit/config.toml
 
-# Expose the port and run
 EXPOSE 3000
+
 CMD ["streamlit", "run", "app.py"]
