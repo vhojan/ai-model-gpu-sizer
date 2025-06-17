@@ -16,6 +16,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Git identity
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Pull latest changes
+        run: git pull --rebase origin main
+
       - name: Set up variables
         id: vars
         run: echo "TAG=sha-${GITHUB_SHA::7}" >> $GITHUB_ENV
@@ -39,16 +47,8 @@ jobs:
         run: |
           sed -i 's|ghcr.io/.*/ai-model-gpu-sizer:.*|ghcr.io/vhojan/ai-model-gpu-sizer:${{ env.TAG }}|' manifests/deployment.yaml
 
-      - name: Pull latest changes
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git pull --rebase origin main
-
       - name: Commit and push manifest changes
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
           git add manifests/deployment.yaml
-          git commit -m "Update image tag to ${{ env.TAG }}"
+          git commit -m "Update image tag to ${{ env.TAG }}" || echo "No changes to commit"
           git push
