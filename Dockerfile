@@ -25,4 +25,4 @@ ENV STREAMLIT_SERVER_ENABLECORS=false
 EXPOSE 3000
 
 # Start the Streamlit app
-CMD ["streamlit", "run", "app.py"]
+CMD ["streamlit", "run", "app.py", "--server.port=3000", "--server.address=0.0.0.0"]
