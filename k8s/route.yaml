@@ -4,10 +4,13 @@ metadata:
   name: gpu-sizer
   namespace: gpu-sizer
 spec:
-  to:
-    kind: Service
-    name: gpu-sizer
+  host: gpu-sizer.apps.osmt.johan.ml
   port:
     targetPort: 3000
   tls:
     termination: edge
+  to:
+    kind: Service
+    name: gpu-sizer
+    weight: 100
+  wildcardPolicy: None
