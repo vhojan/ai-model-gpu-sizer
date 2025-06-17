@@ -18,12 +18,12 @@ ENV STREAMLIT_SERVER_PORT=3000
 ENV STREAMLIT_SERVER_HEADLESS=true
 ENV STREAMLIT_SERVER_ENABLECORS=false
 
-# Copy Streamlit config
+# Copy app source code
 COPY . .
-COPY .streamlit/ /root/.streamlit/
 
-# Expose the port Streamlit runs on
+# Force copy config.toml separately (even if . was already copied)
+COPY .streamlit/config.toml /root/.streamlit/config.toml
+
+# Expose the port and run
 EXPOSE 3000
-
-# Start the Streamlit app
 CMD ["streamlit", "run", "app.py"]
