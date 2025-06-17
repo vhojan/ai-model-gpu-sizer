@@ -13,15 +13,13 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy the rest of the app
-COPY . .
-
 # Streamlit-specific configs
 ENV STREAMLIT_SERVER_PORT=3000
 ENV STREAMLIT_SERVER_HEADLESS=true
 ENV STREAMLIT_SERVER_ENABLECORS=false
 
 # Copy Streamlit config
+COPY . .
 COPY .streamlit/ /root/.streamlit/
 
 # Expose the port Streamlit runs on
