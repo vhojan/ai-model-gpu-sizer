@@ -17,6 +17,9 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 ENV STREAMLIT_SERVER_PORT=3000
 ENV STREAMLIT_SERVER_HEADLESS=true
 ENV STREAMLIT_SERVER_ENABLECORS=false
+ENV STREAMLIT_CONFIG_DIR=/app/.streamlit
+
+RUN mkdir -p /app/.streamlit
 
 # Copy app source code
 COPY . .
