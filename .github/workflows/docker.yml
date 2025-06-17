@@ -39,6 +39,12 @@ jobs:
         run: |
           sed -i 's|ghcr.io/.*/ai-model-gpu-sizer:.*|ghcr.io/vhojan/ai-model-gpu-sizer:${{ env.TAG }}|' manifests/deployment.yaml
 
+      - name: Pull latest changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git pull --rebase origin main
+
       - name: Commit and push manifest changes
         run: |
           git config user.name "GitHub Actions"
