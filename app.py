@@ -1,66 +1,50 @@
+
 import streamlit as st
 import pandas as pd
 
-# Page config
-st.set_page_config(page_title="AI Model GPU Sizer", page_icon="🧠", layout="centered")
+st.set_page_config(page_title="AI Model GPU Sizer", layout="centered")
 
-st.title("🧠 AI Model GPU Sizer")
-st.markdown("Get GPU recommendations for running large language models based on VRAM and latency requirements.")
-
-# Load data
 @st.cache_data
 def load_data():
     models = pd.read_csv("model_catalog.csv")
     gpus = pd.read_csv("gpu_catalog.csv")
     return models, gpus
 
-model_df, gpu_df = load_data()
+models, gpus = load_data()
 
-# --- User Inputs ---
-selected_model = st.selectbox("Choose an AI Model", sorted(model_df["Model"].unique()))
-latency_target = st.selectbox("Target First-Token Latency", ["<1", "<2", "<3", "<5"])
+st.title("🧠 AI Model GPU Sizer")
+st.subheader("Select your model, user count, and latency goal to get a sizing recommendation.")
 
-# --- Matching Logic ---
-def find_compatible_gpus(model_name, user_latency_target):
-    selected = model_df[model_df["Model"] == model_name].iloc[0]
-    required_vram = selected["VRAM Required (GB)"]
-    base_latency = selected["Base Latency (s)"]
+# Model selector
+selected_model = st.selectbox("Choose a model", models["Model"].unique())
+model_info = models[models["Model"] == selected_model].iloc[0]
 
-    results = []
-    for _, gpu in gpu_df.iterrows():
-        vram = gpu["VRAM (GB)"]
-        latency_factor = gpu["Latency Factor"]
-        max_nvlink = int(gpu["Max NVLink GPUs"]) if gpu["NVLink"] and gpu["Max NVLink GPUs"] != "-" else 1
+# Show model metadata
+with st.expander("🔍 Model Details", expanded=True):
+    st.markdown(f"""
+**Model:** {model_info["Model"]}  
+**Parameters:** {model_info["Parameters"]}  
+**Weights Size (FP16):** {model_info["Weights Size (FP16, GB)"]} GB  
+**VRAM Required:** {model_info["VRAM Required (GB)"]} GB  
+**Base Latency:** {model_info["Base Latency (s)"]} s  
+**Architecture:** {model_info["Architecture"]}  
+**Intended Use:** {model_info["Intended Use"]}
+    """)
 
-        for count in range(1, max_nvlink + 1):
-            total_vram = vram * count
-            if total_vram >= required_vram:
-                est_latency = round(base_latency * latency_factor / count, 2)
-                if est_latency <= float(user_latency_target.replace("<", "")):
-                    results.append({
-                        "GPU Type": gpu["GPU Type"],
-                        "Qty": count,
-                        "Total VRAM (GB)": total_vram,
-                        "Est. Latency (s)": est_latency,
-                        "TFLOPs (FP16)": gpu["TFLOPs (FP16)"],
-                        "TFLOPs (FP8)": gpu["TFLOPs (FP8)"],
-                        "TFLOPs (BF16)": gpu["TFLOPs (BF16)"],
-                        "TFLOPs (FP4)": gpu["TFLOPs (FP4)"],
-                        "TOPs (INT8)": gpu["TOPs (INT8)"],
-                        "Arch": gpu["Arch"],
-                        "HGX System": gpu["HGX System"]
-                    })
-                break  # use smallest number of GPUs that work
+# User input
+users = st.slider("Number of concurrent users", min_value=1, max_value=100, value=10)
+latency_target = st.slider("Latency goal (seconds)", min_value=0.2, max_value=5.0, value=1.0, step=0.1)
 
-    return pd.DataFrame(results)
+# Estimate VRAM needs
+total_vram_required = model_info["VRAM Required (GB)"] * users
+st.markdown(f"#### 📊 Total VRAM Required: {total_vram_required:.1f} GB")
 
-# --- Display Results ---
-results_df = find_compatible_gpus(selected_model, latency_target)
+# Suggest GPUs
+eligible_gpus = gpus[gpus["Memory (GB)"] >= model_info["VRAM Required (GB)"]]
+eligible_gpus = eligible_gpus.sort_values(by="FP16 TFLOPs", ascending=False)
 
-if not results_df.empty:
-    st.success(f"Recommended GPU configurations for **{selected_model}** with latency target {latency_target}:")
-    st.dataframe(results_df, use_container_width=True)
-    csv = results_df.to_csv(index=False).encode("utf-8")
-    st.download_button("Download results as CSV", csv, "gpu_recommendations.csv", "text/csv")
+if not eligible_gpus.empty:
+    st.success("✅ Compatible GPU Configurations:")
+    st.dataframe(eligible_gpus[["Model", "Memory (GB)", "FP16 TFLOPs", "NVLink Support"]].reset_index(drop=True), use_container_width=True)
 else:
-    st.warning("No matching GPU configurations found. Try relaxing the latency target or choosing another model.")
+    st.error("❌ No single GPU meets the model's memory requirements.")
