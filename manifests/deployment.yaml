@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: ai-model-gpu-sizer
-        image: ghcr.io/vhojan/ai-model-gpu-sizer:sha-1b6e303
+        image: ghcr.io/vhojan/ai-model-gpu-sizer:sha-0a0fea8
         ports:
         - containerPort: 3000
 ---
